@@ -56,6 +56,25 @@ Le prompt embarque un tableau de preuves (novembre 2026) pour éviter de refaire
 Les sources sont citées dans le prompt. Les chiffres évoluent avec les versions : le prompt demande de les revérifier
 s'ils datent.
 
+## Skills fournies
+
+Deux skills prêtes à copier dans `~/.claude/skills/` (globales) ou `<projet>/.claude/skills/`. Elles illustrent le
+principe central de l'audit : **sortir les procédures du fichier d'instructions**. Seule leur courte description est
+chargée à chaque session ; leur contenu ne se lit que lorsque la tâche le demande.
+
+- [`skills/chantier-adr`](skills/chantier-adr/SKILL.md) — processus de chantier commun à tous les projets : ADR
+  accepté avant tout code, un plan par ADR, six statuts, rouge-vert-refactor avec **preuve du vert** obligatoire pour
+  chaque tâche, délégation ciblée aux sous-agents, clôture et archivage. Un projet l'adopte avec une ligne dans son
+  `AGENTS.md` ou `CLAUDE.md` : « Aucun code sans ADR accepté. Test rouge d'abord. Clôture selon la skill
+  `chantier-adr`. »
+- [`skills/audit-solid`](skills/audit-solid/SKILL.md) — audit de code en lecture seule contre SOLID, les code smells de
+  Fowler, Clean Code et les règles du projet, avec rapport priorisé. Les références détaillées ne se chargent qu'au
+  besoin. Les règles propres à un projet vont dans son `docs/audit/regles-depot.md`, que la skill lit en premier.
+
+**EN** — Two reusable skills: `chantier-adr` (ADR-driven delivery process with a mandatory green-test proof per task)
+and `audit-solid` (read-only SOLID / code-smell / clean-code audit driven by per-project rules). Both are in French;
+they load only when a task needs them.
+
 ## Licence
 
 [MIT](LICENSE)
