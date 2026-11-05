@@ -1,6 +1,6 @@
 ---
 name: chantier-adr
-description: Processus de chantier commun à tous les projets de l'utilisateur, présents et futurs — écrire ou modifier un ADR, créer ou tenir un plan de chantier, changer le statut d'une étape, mener le cycle rouge-vert-refactor, déléguer à des sous-agents, clore une étape ou archiver un plan. À lire avant d'écrire un ADR, d'ouvrir un plan, de démarrer ou de clore une étape (« nouvel ADR », « plan du chantier », « clôture de l'étape », « passe l'étape à Terminée »).
+description: Processus de chantier commun à tous les projets de l'utilisateur, présents et futurs — écrire ou modifier un ADR, créer ou tenir un plan de chantier, changer le statut d'une étape, mener le cycle rouge-vert-refactor, déléguer à des sous-agents, clore une étape ou archiver un plan. À lire avant d'écrire un ADR, d'ouvrir un plan, de démarrer ou de clore une étape (« nouvel ADR », « plan du chantier », « clôture de l'étape », « passe l'étape à Terminée »). Règle non négociable : écrire un plan n'autorise jamais à l'exécuter ; l'agent s'arrête après le plan et attend l'ordre explicite de l'utilisateur.
 ---
 
 # Chantier : ADR, plan, suivi, test d'abord, délégation, clôture
@@ -8,7 +8,22 @@ description: Processus de chantier commun à tous les projets de l'utilisateur, 
 Processus unique pour tous les projets, présents et futurs. Le `AGENTS.md` du projet ajoute ses propres points de
 clôture (commandes, nature des preuves, documents à tenir) ; il ne contredit pas les règles ci-dessous, en particulier
 la **preuve du vert** de chaque tâche. Un nouveau projet adopte cette skill en citant dans son `AGENTS.md` : « Aucun code
-sans ADR accepté. Test rouge d'abord. Clôture selon la skill `chantier-adr` (`~/.claude/skills/chantier-adr/SKILL.md`). »
+sans ADR accepté. Test rouge d'abord. Clôture selon la skill `chantier-adr` (`.claude/skills/chantier-adr/SKILL.md`). »
+
+## Règle non négociable : l'implémentation est lancée à la main
+
+**Une fois le plan écrit, l'agent s'arrête.** Il présente le plan, termine son tour et n'implémente rien, même si l'ADR
+est accepté, même si le plan paraît simple ou minuscule, même en mode sans permission. Aucune exception, et aucun
+`AGENTS.md` de projet ne peut lever cette règle.
+
+- **Seul déclencheur** : un message de l'utilisateur, envoyé **après** la présentation du plan, qui demande explicitement
+  de l'implémenter (« lance le plan 003 », « implémente l'étape 2 »).
+- **Ne déclenchent pas l'implémentation** : l'acceptation de l'ADR, l'approbation du plan (« ok », « le plan me va »), une
+  demande formulée avant l'écriture du plan (« fais l'ADR, le plan et implémente »), la réponse à un arbitrage `Q…`.
+- **Dans le doute, ne pas lancer** : demander à l'utilisateur. Ne pas proposer de démarrage automatique, ne pas lancer de
+  sous-agent, ne pas écrire de test ni de code « pour préparer ».
+- **Portée** : l'ordre fixe le périmètre. « Lance le plan » couvre tout le plan ; « étape 2 » couvre l'étape 2 seule, et
+  l'agent s'arrête ensuite.
 
 ## 1. Décision : un ADR avant tout code
 
@@ -49,7 +64,10 @@ Aucun code n'est écrit sans une décision consignée dans un ADR **accepté** d
 - `À valider` : code et tests présents, mais une recette ou une mesure manque.
 - `Terminée` : toujours avec sa date et ses preuves.
 - Le motif d'un statut `Bloquée` ou `Annulée` entre dans le statut.
-- Le tableau de bord et l'avancement du plan se mettent à jour **dans le même commit** que le code de l'étape.
+- **Mise à jour au fil de l'eau** : le plan reflète à tout moment l'état réel du chantier. Une étape passe `En cours`
+  avant que son travail démarre, et sa fiche et sa ligne du tableau de bord changent dès qu'un résultat arrive, jamais en
+  lot à la fin du chantier. **L'agent principal est le seul à écrire dans le plan** (§ 5).
+- Le tableau de bord et l'avancement du plan sont commités **dans le même commit** que le code de l'étape.
 
 ## 4. Développement : rouge, vert, refactor
 
@@ -74,10 +92,19 @@ régression.
   coûte plus cher qu'un travail direct). Lancer dans un seul message les sous-agents indépendants.
 - Brief autonome : objectif, périmètre, fichiers (disjoints entre sous-agents), contraintes, critère de réussite, rappel
   du test d'abord. Un modèle léger exécute bien un plan précis ; il ne conçoit pas l'architecture.
+- **Le plan appartient à l'agent principal.** Un sous-agent ne modifie ni le plan, ni `docs/ADR/README.md` ; le brief le
+  lui interdit et lui demande de rendre compte, à la fin de sa tâche ou dès un blocage : étape concernée, ce qui est fait,
+  fichiers touchés, commande de test et sa ligne verte, ce qui reste à prouver, blocage éventuel.
+- **À chaque compte rendu d'un sous-agent, avant toute autre action** (lancer la suite, répondre à l'utilisateur),
+  l'agent principal met à jour la fiche de l'étape et sa ligne du tableau de bord : statut, travail fait, tests, preuve du
+  vert. Il vérifie ce qu'il consigne : un résultat annoncé sans commande ni sortie verte ne fait pas passer l'étape
+  `Terminée`. Une étape prouvée en partie passe `À valider` ; une étape bloquée passe `Bloquée (motif)`.
+- En parallèle, chaque retour est consigné à son arrivée, sans attendre les autres sous-agents du lot.
 - **Une seule suite complète à la fois** sur la machine : vérifier qu'aucune autre ne tourne avant de la lancer.
 - Pas de duplication : importer une fonction, constante ou table depuis son module propriétaire plutôt que la recopier.
-- À l'intérieur d'un plan dont l'ADR est accepté, enchaîner les étapes sans redemander d'accord ; rendre compte en fin de
-  plan, ou plus tôt en cas de blocage ou de décision qui revient à l'utilisateur.
+- Une fois l'implémentation lancée par l'utilisateur (voir la règle non négociable en tête), enchaîner les étapes du
+  périmètre demandé sans redemander d'accord ; rendre compte en fin de périmètre, ou plus tôt en cas de blocage ou de
+  décision qui revient à l'utilisateur. Sans cet ordre, aucune étape ne démarre.
 
 ## 6. Clôture d'une étape
 
