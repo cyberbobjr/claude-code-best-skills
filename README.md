@@ -13,8 +13,8 @@ Claude Code renvoie tout le contexte au modèle à chaque échange : instruction
 d'outils, historique. Une configuration lourde se paie donc des milliers de fois. Ce dépôt contient un **prompt
 d'audit** qui demande à Claude Code de :
 
-1. **mesurer** ce qui est chargé à chaque session (`CLAUDE.md`/`AGENTS.md`, imports `@`, mémoire, serveurs MCP,
-   sous-agents, hooks, réglages de modèle et d'effort) ;
+1. **mesurer** ce qui est chargé à chaque session (fichiers d'instructions `CLAUDE.md` **et** `AGENTS.md`, imports
+   `@`, mémoire, serveurs MCP, sous-agents, hooks, réglages de modèle et d'effort) ;
 2. **classer** les corrections par gain estimé, avec preuves ;
 3. **attendre ton accord** avant de modifier quoi que ce soit, en sauvegardant les fichiers et sans rien supprimer.
 
@@ -36,10 +36,19 @@ Le prompt embarque un tableau de preuves (novembre 2026) pour éviter de refaire
 - **Le premier poste est souvent le contexte chargé d'office.** Un fichier d'instructions de plus de 200 lignes ou un
   gros index importé par `@` coûte plus que toutes les autres astuces réunies. Mieux vaut un index court, des skills
   et des documents lus à la demande.
+- **`AGENTS.md` compte autant que `CLAUDE.md`.** Claude Code lit désormais `AGENTS.md` : avec le réglage par défaut
+  (`instructionFiles` = `claude-md-or-agents-md`), il le charge dans un dossier qui n'a pas de `CLAUDE.md`. Un
+  `CLAUDE.md` oublié, même vide, le masque. L'audit vérifie lequel est réellement chargé et applique les mêmes règles
+  de taille aux deux.
+- **Modèle d'abord, effort ensuite.** L'effort `medium` est souvent le réglage le moins cher qui réussit ; `low` peut
+  coûter plus en multipliant les tours.
 - **Le cache compte plus que la compression.** Changer de modèle, d'accélération, de serveur MCP en cours de session,
   ou revenir après une longue pause, refacture tout l'historique.
-- **Les sous-agents ne sont pas gratuits.** Chacun repart de zéro. Haiku pour l'exploration et les tâches simples,
-  oui ; déléguer une petite recherche, non.
+- **Les sous-agents ne sont pas gratuits.** Chacun repart de zéro : sur un petit correctif, trois sous-agents ont coûté
+  2,6 fois plus, sans meilleur résultat. Haiku pour l'exploration et pour exécuter un plan précis, oui ; déléguer une
+  petite recherche, non.
+- **Une longue pause coûte cher.** Reprendre une session après l'expiration du cache a coûté 10 fois plus qu'une
+  reprise dans l'heure : après une longue pause, session neuve ou `/compact` avant de partir.
 - **Les compteurs « tokens économisés » ne sont pas la facture.** Les mesures indépendantes de RTK, de Caveman et de la
   compression des sorties d'outils trouvent des effets faibles, parfois des coûts en hausse. Seul le coût par tâche
   réussie fait foi.
