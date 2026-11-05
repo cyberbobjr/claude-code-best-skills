@@ -1,12 +1,13 @@
-# Prompt — Audit and slim down a Claude Code setup for token usage
-
-Copy everything below the line into a Claude Code session started in the project (or home folder) you want to audit.
-
+---
+name: audit-tokens
+description: Audit a Claude Code setup to cut token usage on every project of the machine without lowering quality — measure what loads at each session (CLAUDE.md / AGENTS.md and @-imports, memory, MCP servers, subagents, skills, hooks, model and effort, cache), rank fixes by saving per session with evidence, apply only after approval. Use for « optimise mes tokens », « réduire la consommation de Claude Code », « audit de configuration Claude Code », "reduce token usage", "Claude Code costs", "context too big", "/usage looks high".
 ---
 
-You are auditing my Claude Code configuration to reduce token usage **systematically, on every project on this
-machine**, without lowering the quality of the work. Reply in my language. Work in two phases and **do not change
-anything before I approve the plan**.
+# Audit tokens — slim down a Claude Code setup
+
+Audit the user's Claude Code configuration to reduce token usage **systematically, on every project on this
+machine**, without lowering the quality of the work. Reply in the user's language. Work in two phases and **do not
+change anything before the user approves the plan**.
 
 ## Phase 1 — Measure (read-only)
 
@@ -22,31 +23,36 @@ enough.
      `CLAUDE.md` when that folder has no `CLAUDE.md`. Report which file actually loads in each folder, flag a stray
      (even empty) `CLAUDE.md` that shadows an `AGENTS.md`, and flag duplicated content between the two. The same
      size rules apply to both; every advice below about `CLAUDE.md` applies to `AGENTS.md` too.
+   - **Across projects**: when the user has several projects, compare their instruction files. A rule repeated in all of
+     them belongs in the user-level file (`~/.claude/CLAUDE.md`, and `~/.codex/AGENTS.md` for Codex); a procedure
+     repeated in several belongs in a shared skill under `~/.claude/skills/`.
 2. **Settings.** Read `~/.claude/settings.json`, project `.claude/settings*.json`: model, effort level, `env`
    (`CLAUDE_CODE_SUBAGENT_MODEL`, `MAX_THINKING_TOKENS`, cache TTL variables), hooks, enabled plugins, status line,
    `idleCompaction`, prompt suggestions.
 3. **Subagents and skills.** List `~/.claude/agents/` and project agents with their `model`, `omitClaudeMd` and the
    length of their `description` (descriptions load every session). Note whether `Explore` is overridden.
-4. **MCP servers and plugins.** List configured servers and how many tools each exposes. Deferred tools still cost
-   their names and server instructions in every request. Flag servers unused in recent work.
+4. **MCP servers and plugins.** List configured servers (`claude mcp list`), their scope (user, project, local) and
+   how many tools each exposes. Deferred tools still cost their names and server instructions in every request. Flag
+   servers unused in recent work, and user-scope servers used by a single project.
 5. **Hooks and output filters** (RTK or others): what they cover (Bash only? built-in Read/Grep/Glob?) and their own
    statistics, if any.
-6. **Usage data.** Ask me to run `/usage` (plan breakdown, prompt-cache line) and `/context`, and paste the result, or
-   read them yourself if you can.
+6. **Usage data.** Ask the user to run `/usage` (plan breakdown, prompt-cache line) and `/context`, and paste the
+   result, or read them yourself if you can.
 
 ## Phase 2 — Report and plan
 
 Produce a short report, ranked by **estimated saving per session**, each line with: finding, evidence (file, size,
-command output), proposed change, estimated effect, risk. Then wait for my go.
+command output), proposed change, estimated effect, risk. Then wait for the user's go.
 
-Apply these principles, which come from measured evidence (see "Evidence" below), not vendor claims:
+Apply these principles, which come from measured evidence ([references/evidence.md](references/evidence.md)), not
+vendor claims:
 
 - **The biggest lever is usually the always-loaded context.** Keep each loaded `CLAUDE.md`/`AGENTS.md` under ~200
   lines. Write in it what the project is for and its non-obvious pitfalls, not what Claude can read in the code, not
   rules repeated elsewhere, not every case that might happen; prefer "match the surrounding code" to absolute bans that
-  contradict each other. Move procedures (verification, review, release) to skills it references, and reference docs
-  to files read on demand; replace long `@` imports with a short index plus "search with `rg`". Move content, never
-  delete it silently.
+  contradict each other. Only durable rules: no status log, no dated story, no counters. Move procedures
+  (verification, review, release) to skills it references, and reference docs to files read on demand; replace long
+  `@` imports with a short index plus "search with `rg`". Move content, never delete it silently.
 - **Model first, then effort.** The model is the largest lever. `medium` effort is often the cheapest setting that still
   succeeds: `low` can cost more by taking several times more turns.
 - **Cache discipline.** Pick model and effort at the start of a session; switching model (including `opusplan` toggles),
@@ -59,7 +65,7 @@ Apply these principles, which come from measured evidence (see "Evidence" below)
   ignores `CLAUDE_CODE_SUBAGENT_MODEL`). Set `omitClaudeMd: true` on subagents that don't need project rules (it skips
   the instruction files, `CLAUDE.md` or `AGENTS.md`). `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` imposes the model on every
   subagent, including ones that write code: mention it, don't apply it by default. A cheap model executes a precise
-  plan well; it plans poorly on its own.
+  plan well; it plans poorly on its own; reviewing or judging code needs a stronger model.
 - **Subagents are not free.** Each starts a fresh context (system prompt, instruction files, delegation message), does
   not reuse the parent's cache and gets a 5-minute cache. Delegate high-volume work (logs, test output, broad searches),
   not small lookups: on a small bug fix, three subagents cost 2.6× a single session with no better result. Agent teams
@@ -68,7 +74,8 @@ Apply these principles, which come from measured evidence (see "Evidence" below)
   resume within the hour). After a long break, start a fresh session or `/compact` before leaving.
 - **Effort and thinking** are output tokens, the most expensive kind; lower effort for routine tasks.
 - **MCP**: deferred tools cost about 15 tokens each per request — far less than a large instruction file. Disable
-  servers you never use (large tool lists add up), enable servers per project, prefer CLIs (`gh`, cloud CLIs).
+  servers you never use (large tool lists add up), scope a server to the one project that uses it, prefer CLIs (`gh`,
+  cloud CLIs).
 - **Watch the cache hit rate.** The `Prompt cache` line of `/usage` should stay high (≥ 90 %); a drop means something
   keeps changing the prefix.
 - **Background usage**: idle compaction, prompt suggestions, `/loop` and scheduled tasks, goal check-ins resend the full
@@ -77,28 +84,18 @@ Apply these principles, which come from measured evidence (see "Evidence" below)
   raw output that would never have entered the context (Claude Code already caps tool output) and ignore that most input
   is cheap cache reads. Check before/after with `/usage` on comparable work.
 
-## Evidence (as of November 2026 — re-check if much later)
+Do not recommend a tool on its README numbers alone. When the setup already uses one of the tools listed in the
+evidence file, look at how it is actually used here (for example, how many searches go through Bash) before judging
+it, and respect the user's choice once stated.
 
-| Technique | Measured effect | Source |
-| --- | --- | --- |
-| Short CLAUDE.md, skills on demand, `/clear`, model choice, effort, MCP pruning | Official recommendations | code.claude.com/docs/en/costs |
-| Cache behavior, TTLs, what invalidates the cache | Official | code.claude.com/docs/en/prompt-caching |
-| Subagent model, `Explore` default model, `omitClaudeMd` | Official | code.claude.com/docs/en/sub-agents |
-| "Caveman" terse-speech skill | −8.5 % output tokens on 82 agentic tasks, quality unchanged (advertised 65 % is chat prose); near-null in an arXiv study | JetBrains AI blog (2026-07); arXiv 2607.12161 |
-| RTK (Bash output filter) | Bill −5 % to +17 % (Quesma), +7.6 % at low effort / 0 % at high effort (JetBrains). Covers Bash commands, including `grep`/`find` run through Bash, but not the built-in Read/Grep/Glob tools. Value depends on how much of your work goes through Bash | quesma.com; JetBrains AI blog (2026-07) |
-| Tool-output compression in general | −38 % tool-output tokens gave +6.8 % cost (more turns, cache effects) | arXiv 2607.12161 "Token Reduction Is Not Cost Reduction" |
-| jCodeMunch (symbol retrieval MCP) | ~80 % fewer tokens on single-symbol lookups (VirtusLab); ~5.7 % end-to-end in the project's own table; stale index, no call graph, commercial licence, telemetry | virtuslab.com; jcodemunch-mcp TOKEN_SAVINGS.md |
-| Code intelligence (LSP) plugins for typed languages | Fewer file reads via go-to-definition (official recommendation) | code.claude.com/docs/en/costs |
-| Settings changed one at a time on one bug fix (Claude Code 2.1.308, 8 hidden tests, 1–2 runs each) | `medium` effort cheapest passing; 3 subagents 2.6× (1.9× forced to Haiku); resume after cache expiry 10×; 700-word CLAUDE.md ≈ 1,600 tokens/request vs ≈ 15 tokens per MCP tool | devtoolpicks.com "What burns your Claude Code limit" |
-| Lean instruction files, procedures in skills, short tool descriptions | Claude Code team: > 80 % of its own system prompt removed for current models with no measurable eval loss | claude.dev "The new rules of context engineering for Claude 5 generation models" |
-| Cache as the first design constraint | Claude Code team monitors cache hit rate like uptime | claude.com/blog "Lessons from building Claude Code: prompt caching is everything" |
-| Haiku executing vs planning | Matched Sonnet at 64 % lower cost when implementing a stronger model's plan; poor when planning itself (small sample) | dev.to "I tried an Opus orchestrator and killed it" |
+## Evidence
 
-Do not recommend a tool on its README numbers alone. When my setup already uses one of these tools, look at how it is
-actually used here (for example, how many searches go through Bash) before judging it.
+Measured results and sources behind these principles: [references/evidence.md](references/evidence.md). Read it when a
+finding involves one of the tools or techniques it lists, or when the user questions a recommendation.
 
 ## Constraints
 
 - Never print secrets (API keys, tokens, `.env` contents) found while reading settings.
 - Back up every file before editing it, keep the user's content (move, don't delete), and list every changed file.
-- After applying, tell me how to verify the effect (`/context` at session start, `/usage` after a few sessions).
+- Do not commit or push in the user's repositories unless asked.
+- After applying, tell the user how to verify the effect (`/context` at session start, `/usage` after a few sessions).
