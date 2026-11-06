@@ -145,9 +145,12 @@ export const register: Register = on => {
       </Text>
     ) : null
 
+    // A tree replaces the mods drawn after this one: keep theirs under it.
+    const theirs = await next(e)
+
     if (e.props.bodyColumns >= WIDE_LAYOUT_COLUMNS) {
       return (
-        <Box>
+        <Box flexDirection="column">
           <Text wrap="truncate">
             {model}
             {separator}
@@ -155,6 +158,7 @@ export const register: Register = on => {
             {usage ? separator : ''}
             {usage ?? ''}
           </Text>
+          {theirs}
         </Box>
       )
     }
@@ -167,6 +171,7 @@ export const register: Register = on => {
           {context}
         </Text>
         {usage ? <Text wrap="truncate">{usage}</Text> : ''}
+        {theirs}
       </Box>
     )
   })

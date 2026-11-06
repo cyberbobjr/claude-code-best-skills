@@ -1,0 +1,6 @@
+{
+  "name": "sky-band",
+  "version": "0.1.0",
+  "description": "Sky above the prompt that follows the time of day, with a star for each commit of the day",
+  "types": "./types/index.d.ts"
+}
