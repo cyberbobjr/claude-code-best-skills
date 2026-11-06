@@ -9,6 +9,8 @@ A Claude Code mod that draws a small sky above the prompt, two rows high, which 
 The sky refreshes every minute. It reads the local time zone with `date` and counts commits with `git rev-list`. It draws
 only in a terminal, and needs Claude Code 2.1.318 or later (the version it was built on).
 
+The band sits above the prompt and keeps what other mods draw there, so it stacks with [`usage-band`](../usage-band/README.md).
+
 ## Install
 
 At the prompt of a terminal session:

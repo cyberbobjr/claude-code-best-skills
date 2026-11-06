@@ -1,6 +1,6 @@
 {
   "name": "usage-band",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Band above the prompt: model, effort, context fill and weekly usage with its projected landing",
   "types": "./types/index.d.ts"
 }

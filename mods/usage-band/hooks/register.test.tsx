@@ -7,6 +7,11 @@ const BAND = (bodyColumns: number) => ({
   props: { hasSurvey: false, isWorking: false, maxRows: 10, bodyColumns, scroll: { offset: 0, bodyRows: 9 }, view: {} },
 } as const)
 
+const otherMods = ($: any, e: any) => {
+  const { Text } = $.ui.resolve(e)
+  return <Text>other mod</Text>
+}
+
 const seed = {
   model: 'claude-opus-5-5',
   effort: 'medium',
@@ -19,6 +24,7 @@ const seed = {
 
 test('the band shows model, effort, context and weekly landing', async ($, on) => {
   on('state.get', () => ({ value: { value: seed, version: 1 } }))
+  on('ui.render', otherMods)
 
   const ui = await $.ui.mount(BAND(120))
 
@@ -32,6 +38,7 @@ test('the band shows model, effort, context and weekly landing', async ($, on) =
 
 test('a narrow band stacks weekly usage on a second row', async ($, on) => {
   on('state.get', () => ({ value: { value: seed, version: 1 } }))
+  on('ui.render', otherMods)
 
   const ui = await $.ui.mount(BAND(70))
 
@@ -43,10 +50,21 @@ test('a narrow band stacks weekly usage on a second row', async ($, on) => {
 
 test('a band without a reading yet omits weekly usage', async ($, on) => {
   on('state.get', () => ({ value: { value: { ...seed, week: null }, version: 1 } }))
+  on('ui.render', otherMods)
 
   const ui = await $.ui.mount(BAND(120))
 
   const line = await ui.find({ type: 'Text', text: /Opus/ })
   expect(line?.text).not.toContain('7j')
+  await ui.unmount()
+})
+
+test('the band keeps what other mods draw', async ($, on) => {
+  on('state.get', () => ({ value: { value: seed, version: 1 } }))
+  on('ui.render', otherMods)
+
+  const ui = await $.ui.mount(BAND(120))
+
+  expect((await ui.find({ type: 'Text', text: /other mod/ }))?.text).toBe('other mod')
   await ui.unmount()
 })
