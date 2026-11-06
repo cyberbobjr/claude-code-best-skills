@@ -7,6 +7,7 @@ import type { Cell } from './lib'
 
 const WIDE_LAYOUT_COLUMNS = 92
 const REFRESH_MS = 60_000
+const RECOVERY_MS = 2_000
 
 const snapshot = atom({ plugin: 'usage-band', key: 'snapshot' } as const, null)
 
@@ -31,21 +32,29 @@ function patch($: EngineInterface, change: (current: Snapshot) => Snapshot) {
   return update($, snapshot, current => (current ? change(current) : current))
 }
 
+async function load($: EngineInterface) {
+  const [model, usage, settings, nowMs] = await Promise.all([
+    $.session.model(),
+    $.session.usage(),
+    $.settings.read(),
+    $.clock.now(),
+  ])
+  await update($, snapshot, () => ({
+    model,
+    effort: typeof settings.effortLevel === 'string' ? settings.effortLevel : null,
+    ...contextFields(usage.context),
+    week: weekOf(usage.rateLimits),
+    nowMs,
+  }))
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
-    const [model, usage, settings, nowMs] = await Promise.all([
-      $.session.model(),
-      $.session.usage(),
-      $.settings.read(),
-      $.clock.now(),
-    ])
-    await update($, snapshot, () => ({
-      model,
-      effort: typeof settings.effortLevel === 'string' ? settings.effortLevel : null,
-      ...contextFields(usage.context),
-      week: weekOf(usage.rateLimits),
-      nowMs,
-    }))
+    await load($)
+    // /clear empties session state and raises no session.start.
+    $.clock.every(RECOVERY_MS, () => {
+      void read($, snapshot).then(state => (state === null ? load($) : undefined))
+    })
     // Landing and countdown move with time, even when the session is idle.
     $.clock.every(REFRESH_MS, () => {
       void $.clock.now().then(now => patch($, current => ({ ...current, nowMs: now })))
