@@ -5,8 +5,8 @@ slims down your Claude Code setup to cut token usage, two package a disciplined 
 a folder from [`skills/`](skills/) into `~/.claude/skills/` (all projects) or `<project>/.claude/skills/` (one
 project). Skills load only when a task needs them; `chantier-adr` and `audit-solid` are written in French.
 
-It also ships a mod: [`usage-band`](mods/usage-band/README.md) draws model, effort, context and weekly usage with its
-projected landing above the prompt.
+It also ships two mods: [`usage-band`](mods/usage-band/README.md) draws model, effort, context and weekly usage with its
+projected landing above the prompt, and [`sky-band`](mods/sky-band/README.md) draws a sky that follows the time of day.
 
 ---
 
@@ -78,9 +78,10 @@ Un mod modifie l'interface de Claude Code. Il s'installe comme un plugin, depuis
 | Mod | Sert à |
 | --- | --- |
 | [`usage-band`](mods/usage-band/README.md) | Afficher au-dessus du prompt le modèle, l'effort, le contexte et la consommation hebdomadaire, avec une projection verte, jaune ou rouge de l'atterrissage au reset |
+| [`sky-band`](mods/sky-band/README.md) | Afficher au-dessus du prompt un ciel qui suit l'heure, avec le soleil, la lune et une étoile par commit du jour |
 
 ```
-/plugin install usage-band --marketplace cyberbobjr/claude-code-best-skills
+/plugin install <mod> --marketplace cyberbobjr/claude-code-best-skills
 ```
 
 ## Licence

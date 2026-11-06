@@ -1,11 +1,18 @@
 {
   "name": "best-skills",
-  "owner": { "name": "cyberbobjr" },
+  "owner": {
+    "name": "cyberbobjr"
+  },
   "plugins": [
     {
       "name": "usage-band",
       "source": "./mods/usage-band",
       "description": "Band above the prompt: model, effort, context fill and weekly usage with its projected landing"
+    },
+    {
+      "name": "sky-band",
+      "source": "./mods/sky-band",
+      "description": "Sky above the prompt that follows the time of day, with a star for each commit of the day"
     }
   ]
 }
