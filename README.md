@@ -5,6 +5,9 @@ slims down your Claude Code setup to cut token usage, two package a disciplined 
 a folder from [`skills/`](skills/) into `~/.claude/skills/` (all projects) or `<project>/.claude/skills/` (one
 project). Skills load only when a task needs them; `chantier-adr` and `audit-solid` are written in French.
 
+It also ships a mod: [`usage-band`](mods/usage-band/README.md) draws model, effort, context and weekly usage with its
+projected landing above the prompt.
+
 ---
 
 ## À quoi servent ces skills
@@ -67,6 +70,18 @@ cp -r skills/<nom> <projet>/.claude/skills/
 ```
 
 Dans une nouvelle session, la skill se déclenche seule quand la demande correspond, ou s'appelle par `/<nom>`.
+
+## Mods
+
+Un mod modifie l'interface de Claude Code. Il s'installe comme un plugin, depuis ce dépôt qui sert de marketplace.
+
+| Mod | Sert à |
+| --- | --- |
+| [`usage-band`](mods/usage-band/README.md) | Afficher au-dessus du prompt le modèle, l'effort, le contexte et la consommation hebdomadaire, avec une projection verte, jaune ou rouge de l'atterrissage au reset |
+
+```
+/plugin install usage-band --marketplace cyberbobjr/claude-code-best-skills
+```
 
 ## Licence
 

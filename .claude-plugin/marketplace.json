@@ -1,0 +1,11 @@
+{
+  "name": "best-skills",
+  "owner": { "name": "cyberbobjr" },
+  "plugins": [
+    {
+      "name": "usage-band",
+      "source": "./mods/usage-band",
+      "description": "Band above the prompt: model, effort, context fill and weekly usage with its projected landing"
+    }
+  ]
+}
