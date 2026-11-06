@@ -4,6 +4,7 @@ import type { EngineInterface, Register } from 'claude-code'
 import { minuteOfDay, parseOffset, SKY_ROWS, skyCells } from './sky'
 
 const REFRESH_MS = 60_000
+const RECOVERY_MS = 2_000
 
 // toBase64 exists at runtime, but the contract file cannot declare it.
 const encode = (words: Uint32Array) => (new Uint8Array(words.buffer) as Uint8Array & { toBase64(): string }).toBase64()
@@ -27,10 +28,18 @@ async function utcOffset($: EngineInterface): Promise<number> {
   }
 }
 
+async function load($: EngineInterface) {
+  const [offsetMinutes, commits, nowMs] = await Promise.all([utcOffset($), commitsToday($), $.clock.now()])
+  await update($, sky, () => ({ nowMs, offsetMinutes, commits }))
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
-    const [offsetMinutes, commits, nowMs] = await Promise.all([utcOffset($), commitsToday($), $.clock.now()])
-    await update($, sky, () => ({ nowMs, offsetMinutes, commits }))
+    await load($)
+    // /clear empties session state and raises no session.start.
+    $.clock.every(RECOVERY_MS, () => {
+      void read($, sky).then(state => (state === null ? load($) : undefined))
+    })
     $.clock.every(REFRESH_MS, () => {
       void $.clock.now().then(now => update($, sky, current => (current ? { ...current, nowMs: now } : current)))
     })
